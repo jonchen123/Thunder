@@ -2,10 +2,13 @@ require 'sinatra'
 require 'twilio-ruby'
 require 'google_places'
 require 'google_map_directions'
+require 'geocoder'
 
 post '/sms' do
 	#create new variable that stores the body of the message sent
 	incoming = params[:Body]
+	#find user location
+	location = Geocoder.address(request.remote_ip)
 	
 	#create new client to Google Places with my API key
 	client = GooglePlaces::Client.new('AIzaSyCkLbMGDVjRdFjb9EHm4e9HJdm6XzVPzYk')
@@ -14,13 +17,13 @@ post '/sms' do
 	#the types will give you places that match the category you want
 	#the radius will restrict the distance of places around you
 	best_place = client.spots_by_query(incoming, :types => ['food'], :radius => 16000)[0]
-	directions = GoogleMapDirections::Directions.new('Atlanta GA', "#{best_place.formatted_address}")
+	#get directions to best_place from user location
+	directions = GoogleMapDirections::Directions.new(location, "#{best_place.formatted_address}")
 	numSteps = directions.path_length
 
 	#this will create a new twilio response
 	twiml = Twilio::TwiML::Response.new do |r|
 		r.Message("Found #{best_place.name}. The address is #{best_place.formatted_address}")
-		#send directions
 		(0..numSteps - 1).each do |i|
 			step = directions.step(i)
 			r.Message(step.HTML_instructions)
@@ -32,3 +35,5 @@ post '/sms' do
 	#send a text back from your twilio account
 	twiml.text
 end
+
+#format the directions better
