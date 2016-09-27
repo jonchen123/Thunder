@@ -7,8 +7,8 @@ require 'geocoder'
 post '/sms' do
 	#create new variable that stores the body of the message sent
 	incoming = params[:Body]
-	#find user location
-	location = Geocoder.address(request.remote_ip)
+	#find user location -- get this to work???
+	#location = Geocoder.address(request.remote_ip)
 	
 	#create new client to Google Places with my API key
 	client = GooglePlaces::Client.new('AIzaSyCkLbMGDVjRdFjb9EHm4e9HJdm6XzVPzYk')
@@ -18,15 +18,21 @@ post '/sms' do
 	#the radius will restrict the distance of places around you
 	best_place = client.spots_by_query(incoming, :types => ['food'], :radius => 16000)[0]
 	#get directions to best_place from user location
-	directions = GoogleMapDirections::Directions.new(location, "#{best_place.formatted_address}")
+	directions = GoogleMapDirections::Directions.new("Atlanta GA", "#{best_place.formatted_address}")
 	numSteps = directions.path_length
 
 	#this will create a new twilio response
 	twiml = Twilio::TwiML::Response.new do |r|
-		r.Message("Found #{best_place.name}. The address is #{best_place.formatted_address}")
-		(0..numSteps - 1).each do |i|
-			step = directions.step(i)
-			r.Message(step.HTML_instructions)
+		#if nothing was found
+		if best_place.nil?
+			r.Message("Sorry, nothing was found. Try again.")
+		else
+			r.Message("Found #{best_place.name}. The address is #{best_place.formatted_address}")
+			#send a message of each direction
+			(0..numSteps - 1).each do |i|
+				step = directions.step(i)
+				r.Message(step.HTML_instructions)
+			end
 		end
 	end
 
