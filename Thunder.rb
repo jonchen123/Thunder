@@ -8,6 +8,7 @@ post '/sms' do
 	#create new variable that stores the body of the message sent
 	incoming = params[:Body]
 	#find user location -- get this to work???
+	#send a message asking for user location and store response
 	#location = Geocoder.address(request.remote_ip)
 	
 	#create new client to Google Places with my API key
