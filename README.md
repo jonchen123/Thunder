@@ -9,3 +9,4 @@ Original code used as inspiration for the talk from here: https://github.com/dra
 
 
 Increased functionality is still being added.
+TODO: Use Google Places photo to provide a picture of the place if necessary
